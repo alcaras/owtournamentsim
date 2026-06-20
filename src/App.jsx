@@ -59,9 +59,17 @@ export default function App() {
 
 	const numSwissSteps = t.numSwissSteps;
 	const numBracketRounds = t.championship ? t.championship.rounds.length : 0;
-	const totalSteps = numSwissSteps + numBracketRounds;
+	// Championship phase gets one extra "bracket set" step (seeds shown, nothing
+	// played yet) before the per-round reveals, so it advances one round at a time.
+	const bracketSteps = t.championship ? numBracketRounds + 1 : 0;
+	const totalSteps = numSwissSteps + bracketSteps;
 	const isComplete = step >= totalSteps;
 	const inSwiss = step <= numSwissSteps;
+	// Rounds whose results are revealed: 0 = bracket set, then one per step.
+	const playedRounds = Math.max(
+		0,
+		Math.min(numBracketRounds, step - numSwissSteps - 1),
+	);
 
 	useEffect(() => {
 		if (!playing) return;
@@ -165,10 +173,15 @@ export default function App() {
 		stageSub = t.champion ? `${nameOf(t.champion)} crowned champion` : "—";
 	} else {
 		const labels = { 1: "Final", 2: "Semifinals", 4: "Quarterfinals", 8: "Round of 16", 16: "Round of 32", 32: "Round of 64" };
-		const played = step - numSwissSteps;
-		const m = t.championship.rounds[played - 1].length;
-		stageLabel = `Championship — ${labels[m] || `Round ${played}`}`;
-		stageSub = m === 1 ? "Grand final" : `${m} matches`;
+		if (playedRounds === 0) {
+			const r1 = t.championship.rounds[0].length;
+			stageLabel = "Championship — Bracket set";
+			stageSub = `Top ${t.championship.seedOrder.length} seeded · ${labels[r1] || `${r1} matches`} up next`;
+		} else {
+			const m = t.championship.rounds[playedRounds - 1].length;
+			stageLabel = `Championship — ${labels[m] || `Round ${playedRounds}`}`;
+			stageSub = m === 1 ? "Grand final" : `${m} matches`;
+		}
 	}
 
 	const upsetLabel =
@@ -347,7 +360,7 @@ export default function App() {
 				{!inSwiss && t.championship && (
 					<BracketView
 						championship={t.championship}
-						playedRounds={step - numSwissSteps}
+						playedRounds={playedRounds}
 						isComplete={isComplete}
 						champion={t.champion}
 						nameOf={nameOf}

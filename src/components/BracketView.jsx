@@ -124,6 +124,9 @@ export const BracketView = memo(function BracketView({
 						const m = mp.match;
 						const aWon = m.winner_slot_id === m.a_slot;
 						const isPlayed = rIdx < playedRounds;
+						// Participants of a round only appear once the feeding round
+						// has been played (R1 is revealed as soon as the bracket is set).
+						const revealed = rIdx <= playedRounds;
 						const isFinal = rIdx === numRounds - 1 && isPlayed;
 						return (
 							<MatchBox
@@ -133,6 +136,7 @@ export const BracketView = memo(function BracketView({
 								y={mp.y}
 								aWon={aWon}
 								isPlayed={isPlayed}
+								revealed={revealed}
 								isFinal={isFinal}
 								matchWidth={matchWidth}
 								matchHeight={matchHeight}
@@ -156,7 +160,7 @@ export const BracketView = memo(function BracketView({
 	);
 });
 
-function MatchBox({ m, x, y, aWon, isPlayed, isFinal, matchWidth, matchHeight, nameOf, champSeedOf, stripe }) {
+function MatchBox({ m, x, y, aWon, isPlayed, revealed, isFinal, matchWidth, matchHeight, nameOf, champSeedOf, stripe }) {
 	const stripeW = 4;
 	const halfH = matchHeight / 2 - 1;
 
@@ -169,11 +173,12 @@ function MatchBox({ m, x, y, aWon, isPlayed, isFinal, matchWidth, matchHeight, n
 	};
 
 	const row = (slot, won, yOff) => {
-		const occupied = !!slot;
-		const label = occupied ? fitName(nameOf(slot)) : m.is_bye ? "bye" : "—";
+		// A slot is only shown once its round has been reached.
+		const occupied = revealed && !!slot;
+		const label = occupied ? fitName(nameOf(slot)) : revealed && m.is_bye ? "bye" : "";
 		return (
 			<g>
-				<rect x={0} y={yOff} width={stripeW} height={halfH} fill={stripe(slot)} />
+				<rect x={0} y={yOff} width={stripeW} height={halfH} fill={stripe(occupied ? slot : null)} />
 				<rect
 					x={stripeW}
 					y={yOff}
