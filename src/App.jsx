@@ -10,6 +10,7 @@ import {
 import { simulateTournament } from "./engine/simulate.js";
 import { PairingsPanel, ZoneColumn } from "./components/SwissView.jsx";
 import { BracketView } from "./components/BracketView.jsx";
+import { SeedingPreview } from "./components/SeedingPreview.jsx";
 
 function randomSeed() {
 	return Math.random().toString(36).slice(2, 9);
@@ -45,6 +46,7 @@ export default function App() {
 	const [roster] = useState(ROSTER);
 	const slots = useMemo(() => buildSlots(roster), [roster]);
 
+	const [view, setView] = useState("sim");
 	const [upset, setUpset] = useState(0.35);
 	const [pendingUpset, setPendingUpset] = useState(0.35);
 	const [seed, setSeed] = useState(() => randomSeed());
@@ -214,6 +216,30 @@ export default function App() {
 					</p>
 				</div>
 
+				{/* Tabs */}
+				<div className="flex gap-1 mb-3">
+					{[
+						["sim", "Simulator"],
+						["seed", "Seeding preview"],
+					].map(([id, label]) => (
+						<button
+							key={id}
+							onClick={() => setView(id)}
+							className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+								view === id
+									? "bg-orange text-blue-gray"
+									: "bg-gray-raised text-muted hover:text-bright"
+							}`}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+
+				{view === "seed" && <SeedingPreview />}
+
+				{view === "sim" && (
+					<>
 				{/* Controls */}
 				<div className="bg-gray-deep rounded-xl p-3 mb-3 border border-border-subtle">
 					<div className="flex flex-wrap items-end gap-3 mb-3">
@@ -372,6 +398,8 @@ export default function App() {
 					<div className="bg-gray-deep rounded-xl p-6 border border-border-subtle text-center text-muted">
 						Fewer than two players advanced — no championship.
 					</div>
+				)}
+					</>
 				)}
 
 				<div className="mt-3 text-center text-[11px] text-muted">
