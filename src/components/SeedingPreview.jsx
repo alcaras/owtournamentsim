@@ -186,8 +186,28 @@ function parseCons(text) {
 	return { map, count, error: null };
 }
 
-function consFor(name, consMap) {
-	const e = consMap.get(norm(name)) || consMap.get(norm(name.split(/[ (]/)[0]));
+// Parse optional alias lines mapping a roster name to a ratings label, e.g.
+//   Spider = frederik
+//   CLIFF123 == cliff
+// Returns Map(norm(rosterName) → ratingLabel string).
+function parseAliases(text) {
+	const map = new Map();
+	for (const line of text.split(/\r?\n/)) {
+		const m = line.match(/^(.+?)\s*={1,2}\s*(.+?)\s*$/);
+		if (!m) continue;
+		const from = norm(m[1]);
+		if (from) map.set(from, m[2].trim());
+	}
+	return map;
+}
+
+function consFor(name, consMap, aliasMap) {
+	// Explicit alias wins: resolve the roster name to a ratings label first.
+	const target =
+		aliasMap?.get(norm(name)) || aliasMap?.get(norm(name.split(/[ (]/)[0]));
+	const lookup = target ?? name;
+	const e =
+		consMap.get(norm(lookup)) || consMap.get(norm(lookup.split(/[ (]/)[0]));
 	return e ? e.cons : null;
 }
 
@@ -240,6 +260,91 @@ const DIV_LABEL = {
 	A: "The New World — Americas",
 	B: "The Old World — Europe, Africa, Asia, Oceania",
 };
+
+// Diff the working order against the sign-up order, per division. Returns the
+// players whose seed changed (old → new), sorted by their new seed — i.e. the
+// exact reorder to reproduce on the per-ankh site.
+function computeChanges(base, order) {
+	const out = {};
+	let total = 0;
+	for (const div of ["A", "B"]) {
+		const oldSeed = new Map(base[div].map((p, i) => [p.name, i + 1]));
+		const moved = [];
+		order[div].forEach((p, i) => {
+			const from = oldSeed.get(p.name);
+			const to = i + 1;
+			if (from !== to) moved.push({ name: p.name, from, to, cons: p.cons });
+		});
+		out[div] = moved;
+		total += moved.length;
+	}
+	return { ...out, total };
+}
+
+function ChangeTable({ base, order }) {
+	const changes = useMemo(() => computeChanges(base, order), [base, order]);
+	if (changes.total === 0) return null;
+
+	return (
+		<div className="bg-gray-deep rounded-xl p-3 border border-orange/40">
+			<div className="flex items-baseline justify-between mb-2">
+				<h3 className="font-bold text-orange">What to change on per-ankh</h3>
+				<span className="text-xs text-muted">
+					{changes.total} player{changes.total === 1 ? "" : "s"} move
+				</span>
+			</div>
+			<p className="text-[11px] text-muted mb-2">
+				Each row is a player whose seed changed vs sign-up order. On per-ankh,
+				drag each player to their <span className="text-tan">New</span> seed
+				(rows are listed in new-seed order, so applying top-to-bottom
+				reproduces the result).
+			</p>
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-3">
+				{["A", "B"].map((div) =>
+					changes[div].length === 0 ? null : (
+						<div key={div}>
+							<div
+								className={`text-[11px] uppercase tracking-wider mb-1 ${div === "A" ? "text-newworld" : "text-oldworld"}`}
+							>
+								{DIV_LABEL[div]}
+							</div>
+							<table className="w-full text-sm">
+								<thead>
+									<tr className="text-[11px] text-muted uppercase tracking-wider">
+										<th className="text-left font-normal w-12">New</th>
+										<th className="text-left font-normal w-12">Was</th>
+										<th className="text-left font-normal">Player</th>
+										<th className="text-right font-normal w-12">Move</th>
+									</tr>
+								</thead>
+								<tbody>
+									{changes[div].map((c) => {
+										const up = c.to < c.from; // lower seed number = moved up
+										return (
+											<tr key={c.name} className="border-t border-border-subtle/50">
+												<td className="tabular-nums text-tan font-semibold">
+													#{c.to}
+												</td>
+												<td className="tabular-nums text-muted">#{c.from}</td>
+												<td className="text-bright truncate">{c.name}</td>
+												<td
+													className={`text-right tabular-nums ${up ? "text-newworld" : "text-orange"}`}
+												>
+													{up ? "▲" : "▼"}
+													{Math.abs(c.to - c.from)}
+												</td>
+											</tr>
+										);
+									})}
+								</tbody>
+							</table>
+						</div>
+					),
+				)}
+			</div>
+		</div>
+	);
+}
 
 function DivisionCard({ division, players, slots, hasCons }) {
 	if (!players.length) return null;
@@ -463,6 +568,7 @@ function MatchupChecker({ slots }) {
 export function SeedingPreview() {
 	const [text, setText] = useState(SAMPLE);
 	const [consText, setConsText] = useState("");
+	const [aliasText, setAliasText] = useState("");
 	const [showCons, setShowCons] = useState(false);
 
 	const rosterNames = useMemo(() => parseRoster(text), [text]);
@@ -470,6 +576,7 @@ export function SeedingPreview() {
 		() => parseCons(consText),
 		[consText],
 	);
+	const aliasMap = useMemo(() => parseAliases(aliasText), [aliasText]);
 	const hasCons = consCount > 0;
 
 	// Base order straight from the paste, with cons attached. The working
@@ -477,9 +584,9 @@ export function SeedingPreview() {
 	// whenever the registration or ratings inputs change.
 	const baseOrder = useMemo(() => {
 		const attach = (names) =>
-			names.map((name) => ({ name, cons: consFor(name, consMap) }));
+			names.map((name) => ({ name, cons: consFor(name, consMap, aliasMap) }));
 		return { A: attach(rosterNames.A), B: attach(rosterNames.B) };
-	}, [rosterNames, consMap]);
+	}, [rosterNames, consMap, aliasMap]);
 
 	const [order, setOrder] = useState(baseOrder);
 	useEffect(() => setOrder(baseOrder), [baseOrder]);
@@ -533,6 +640,22 @@ export function SeedingPreview() {
 							{consError && (
 								<p className="text-[11px] text-orange mt-1">{consError}</p>
 							)}
+							<label className="text-[11px] uppercase tracking-wider text-muted mt-2 mb-1 block">
+								Aliases (optional) — map a roster name to a ratings handle
+							</label>
+							<textarea
+								value={aliasText}
+								onChange={(e) => setAliasText(e.target.value)}
+								rows={2}
+								spellCheck={false}
+								placeholder={"Spider = frederik\nCLIFF123 = cliff"}
+								className="w-full bg-gray-raised rounded-lg p-2 text-xs font-mono border border-border-subtle focus:border-orange outline-none"
+							/>
+							{aliasMap.size > 0 && (
+								<p className="text-[11px] text-muted mt-1">
+									{aliasMap.size} alias{aliasMap.size === 1 ? "" : "es"} applied.
+								</p>
+							)}
 							<div className="flex flex-wrap items-center gap-2 mt-2">
 								<span className="text-xs text-muted">Seed:</span>
 								<button
@@ -572,6 +695,8 @@ export function SeedingPreview() {
 			</div>
 
 			<MatchupChecker slots={slots} />
+
+			<ChangeTable base={baseOrder} order={order} />
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 				<DivisionCard
