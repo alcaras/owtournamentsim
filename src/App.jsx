@@ -12,6 +12,8 @@ import { PairingsPanel, ZoneColumn } from "./components/SwissView.jsx";
 import { BracketView } from "./components/BracketView.jsx";
 import { SeedingPreview } from "./components/SeedingPreview.jsx";
 
+const EMPTY_MAP = new Map();
+
 function randomSeed() {
 	return Math.random().toString(36).slice(2, 9);
 }
@@ -166,6 +168,17 @@ export default function App() {
 
 	const groupsA = useMemo(() => groupByStatus(snapFor("A")), [t, step, slots]);
 	const groupsB = useMemo(() => groupByStatus(snapFor("B")), [t, step, slots]);
+
+	// Final Swiss standings (last round snapshot), shown below the bracket so the
+	// Swiss results stay reachable during the championship phase.
+	const finalSnapFor = (division) => {
+		const rounds = t.divisions[division].rounds;
+		return rounds.length
+			? rounds[rounds.length - 1].snapshot
+			: initialSnapshot(slots, division);
+	};
+	const finalGroupsA = useMemo(() => groupByStatus(finalSnapFor("A")), [t, slots]);
+	const finalGroupsB = useMemo(() => groupByStatus(finalSnapFor("B")), [t, slots]);
 	const roundA = inSwiss && step >= 1 ? roundFor("A") : null;
 	const roundB = inSwiss && step >= 1 ? roundFor("B") : null;
 
@@ -430,6 +443,43 @@ export default function App() {
 						divOf={divOf}
 						champSeedOf={champSeedOf}
 					/>
+				)}
+
+				{/* Swiss final standings — kept visible during the championship */}
+				{!inSwiss && (
+					<div className="mt-3">
+						<h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+							Swiss final standings
+						</h2>
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+							<ZoneColumn
+								division="A"
+								name={DIVISION_NAMES.A}
+								subtitle={DIVISION_SUBTITLES.A}
+								groups={finalGroupsA}
+								resultMap={EMPTY_MAP}
+								oppMap={EMPTY_MAP}
+								nameOf={nameOf}
+								seedOf={seedOf}
+								total={roster.A.length}
+								showCut
+								inChampionship={inChampionship}
+							/>
+							<ZoneColumn
+								division="B"
+								name={DIVISION_NAMES.B}
+								subtitle={DIVISION_SUBTITLES.B}
+								groups={finalGroupsB}
+								resultMap={EMPTY_MAP}
+								oppMap={EMPTY_MAP}
+								nameOf={nameOf}
+								seedOf={seedOf}
+								total={roster.B.length}
+								showCut
+								inChampionship={inChampionship}
+							/>
+						</div>
+					</div>
 				)}
 				{!inSwiss && !t.championship && (
 					<div className="bg-gray-deep rounded-xl p-6 border border-border-subtle text-center text-muted">
