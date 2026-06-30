@@ -149,6 +149,7 @@ function parseCons(text) {
 				cons: e.conservative ?? e.cons,
 				registered: !!e.registered,
 				games: e.games ?? 0,
+				aliases: Array.isArray(e.aliases) ? e.aliases : [],
 			}));
 		} else {
 			for (const line of trimmed.split(/\r?\n/)) {
@@ -168,12 +169,12 @@ function parseCons(text) {
 	}
 
 	const map = new Map();
-	let count = 0;
-	for (const e of entries) {
-		if (!e.label || typeof e.cons !== "number" || Number.isNaN(e.cons)) continue;
-		count++;
-		const keys = new Set([norm(e.label), norm(e.label.split(/[ (]/)[0])]);
-		for (const k of keys) {
+	const valid = entries.filter(
+		(e) => e.label && typeof e.cons === "number" && !Number.isNaN(e.cons),
+	);
+	// Pass 1: label-based keys, with registered/games precedence on collisions.
+	for (const e of valid) {
+		for (const k of new Set([norm(e.label), norm(e.label.split(/[ (]/)[0])])) {
 			if (!k) continue;
 			const cur = map.get(k);
 			const better =
@@ -183,7 +184,15 @@ function parseCons(text) {
 			if (better) map.set(k, e);
 		}
 	}
-	return { map, count, error: null };
+	// Pass 2: explicit per-entry aliases win — map each alias to its entry.
+	for (const e of valid) {
+		for (const a of e.aliases) {
+			for (const k of new Set([norm(a), norm(String(a).split(/[ (]/)[0])])) {
+				if (k) map.set(k, e);
+			}
+		}
+	}
+	return { map, count: valid.length, error: null };
 }
 
 // Parse optional alias lines mapping a roster name to a ratings label, e.g.
