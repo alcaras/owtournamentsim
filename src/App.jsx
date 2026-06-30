@@ -120,6 +120,38 @@ export default function App() {
 	}, [t]);
 	const champSeedOf = useCallback((id) => champSeed.get(id) ?? "", [champSeed]);
 
+	// ---- games counter (excludes byes — those aren't played) ----
+	const totalGames = useMemo(() => {
+		let n = 0;
+		for (const d of ["A", "B"]) {
+			for (const round of t.divisions[d].rounds) {
+				n += round.matches.filter((m) => m.slot_b_id !== null).length;
+			}
+		}
+		if (t.championship) {
+			for (const round of t.championship.rounds) {
+				n += round.filter((m) => !m.is_bye).length;
+			}
+		}
+		return n;
+	}, [t]);
+	const gamesPlayed = useMemo(() => {
+		let n = 0;
+		for (const d of ["A", "B"]) {
+			const rounds = t.divisions[d].rounds;
+			const upTo = Math.min(step, rounds.length);
+			for (let i = 0; i < upTo; i++) {
+				n += rounds[i].matches.filter((m) => m.slot_b_id !== null).length;
+			}
+		}
+		if (t.championship) {
+			for (let i = 0; i < playedRounds; i++) {
+				n += t.championship.rounds[i].filter((m) => !m.is_bye).length;
+			}
+		}
+		return n;
+	}, [t, step, playedRounds]);
+
 	// ---- swiss step data ----
 	const snapFor = (division) => {
 		const rounds = t.divisions[division].rounds;
@@ -324,6 +356,11 @@ export default function App() {
 							)}
 						</span>
 						<span className="ml-auto text-muted">
+							<span className="text-bright font-medium">{gamesPlayed}</span>
+							<span className="opacity-50"> / </span>
+							{totalGames} games played
+						</span>
+						<span className="text-muted">
 							seed <code className="text-tan">{seed}</code>
 						</span>
 					</div>
