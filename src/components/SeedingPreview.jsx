@@ -87,7 +87,7 @@ The Old World (Europe, Africa, Asia, Oceania)
 // Timezone / availability keywords that mark the start of a note inside a name
 // cell. We cut the name at the first one so multi-word handles survive.
 const NOTE_RX =
-	/\b(UTC|GMT|BST|EST|EDT|CST|CDT|MST|MDT|PST|PDT|EEST|MTS|PT|ET|CT|MT|Pacific|Mountain|Central|Eastern|Standard|Timezone|Time)\b|[−-]\s*\d|[;,]|\bI\b|\byes\b|\bno\b/i;
+	/\b(UTC|GMT|BST|EST|EDT|CST|CDT|MST|MDT|PST|PDT|EEST|MTS|PT|ET|CT|MT|Pacific|Mountain|Central|Eastern|Standard|Timezone|Time)\b|[−+\-]\s*\d|[;,]|\bI\b|\byes\b|\bno\b/i;
 
 function cleanName(raw) {
 	let s = raw.replace(/✓/g, " ").trim(); // strip ✓
