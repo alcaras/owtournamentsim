@@ -22,67 +22,70 @@ import { pairSwissRound } from "../engine/pairing.js";
 import { CONFIG } from "../data/players.js";
 
 const SAMPLE = `The New World (Americas)
-1\tNinjaa\t✓
-2\tSiontific\t✓
-3\tAuro Central Time, yes open\t✓
-4\talcaras Pacific (UTC-7)\t✓
-5\tSabertooth\t✓
-6\tNicknight EST\t✓
-7\tThePurpleBullMoose\t✓
-8\tkerstad UTC-5, yes I can play in alt division\t✓
-9\tfiddlers25 utc-4 yes\t✓
-10\tzophister UTC -7. Would prefer to play in division.\t✓
-11\tMongrelEyes est. yes will play in other division\t✓
-12\tHazardBringsAxe MTS. Sure I can play at any hour\t✓
-13\tDrunkenMeister\t✓
-14\tMagnus UTC-5\t✓
-15\tprofessorcurly UTC-4\t✓
-16\tJCT UTC-4\t✓
-17\tShaunMcNamee UTC-5, no\t✓
-18\tGodlovesus UTC-5/EST Yes\t✓
-19\tA_Modern_Major_General UTC -7\t✓
-20\tCorset Moosifer Lebelle PST west coast of Canada\t✓
-21\tasteres -7\t✓
-22\tcalitiso MST; UTC-6. and yes (:\t✓
-23\tant PDT\t✓
-24\tScrubinski -7\t✓
-25\twatchtheturd CST. Yes.\t✓
-26\t🐦🐦ĐØɄ฿ⱠɆ₵ØⱤVłĐ🐦🐦 UTC-4\t✓
-27\tnobody Pacific Standard Time (UTC-8)\t✓
-28\tOrion. UTC−06:00 (Central Time Zone).\t✓
-29\tAuxArmes UTC -4. Would rather not play by European time\t✓
+1\tSiontific\t✓
+2\tAuro Central Time, yes open\t✓
+3\talcaras Pacific (UTC-7)\t✓
+4\tSabertooth\t✓
+5\tThePurpleBullMoose\t✓
+6\tkerstad UTC-5, yes I can play in alt division\t✓
+7\tfiddlers25 utc-4 yes\t✓
+8\tzophister UTC -7. Would prefer to play in division.\t✓
+9\tMongrelEyes est. yes will play in other division\t✓
+10\tHazardBringsAxe MTS. Sure I can play at any hour\t✓
+11\tDrunkenMeister\t✓
+12\tNicknight EST; available 21:00-02:00 weekends, any time Thursdays\t✓
+13\tMagnus UTC-5\t✓
+14\tprofessorcurly UTC-4\t✓
+15\tJCT UTC-4\t✓
+16\tShaunMcNamee UTC-5, no\t✓
+17\tGodlovesus UTC-5/EST Yes\t✓
+18\tA_Modern_Major_General UTC -7\t✓
+19\tCorset Moosifer Lebelle PST west coast of Canada\t✓
+20\tasteres -7\t✓
+21\tcalitiso MST; UTC-6. and yes (:\t✓
+22\tant PDT\t✓
+23\tScrubinski -7\t✓
+24\twatchtheturd CST. Yes.\t✓
+25\t🐦🐦ĐØɄ฿ⱠɆ₵ØⱤVłĐ🐦🐦 UTC-4\t✓
+26\tnobody Pacific Standard Time (UTC-8)\t✓
+27\tOrion. UTC−06:00 (Central Time Zone).\t✓
+28\tAuxArmes UTC -4. Would rather not play by European time\t✓
+29\twild_rook UTC-4\t✓
+30\tbrrak UTC-8\t✓
+31\tNinjaa\t✓
 The Old World (Europe, Africa, Asia, Oceania)
 1\tKlass_Koala UTC +3; like to play in evenings/nights\t✓
 2\tAran UTC+2\t✓
-3\tproblemgambler +2\t✓
-4\tSpider UTC+2\t✓
+3\tSpider UTC+2\t✓
+4\tproblemgambler +2\t✓
 5\tfluffybunny UTC+1\t✓
 6\tBoldus UTC+2\t✓
-7\tNestorLN UTC+2\t✓
-8\tMoroten Utc+2\t✓
-9\tKonstant UTC+3.\t✓
+7\tMoroten Utc+2\t✓
+8\tKonstant UTC+3.\t✓
+9\tNestorLN UTC+2\t✓
 10\tMax (3WordName) UTC + 1, yes\t✓
 11\tNapalmikoira UTC+3, can play in The New World (Americas) also\t✓
-12\tMarauder Utc+2\t✓
-13\tCLIFF123 Timezone is GMT\t✓
-14\tMichael of Minsk\t✓
-15\tIlyaGurkov GMT+3\t✓
-16\tsolutodka. UTC+8 until July 19th\t✓
+12\tMojo UTC+2\t✓
+13\tMarauder Utc+2\t✓
+14\tsolutodka. UTC+8 until July 19th\t✓
+15\tCLIFF123 Timezone is GMT\t✓
+16\tIlyaGurkov GMT+3\t✓
 17\tImpognagrift My time zone is UTC+1.\t✓
-18\tphielp UTC+2\t✓
-19\ttjumma UTC +3\t✓
-20\tJel UTC+2\t✓
-21\tteuzet.\t✓
-22\tbeefy BST (UTC+1). I can play in another division.\t✓
-23\tchloriss UTC+3, open to play in any division if needed\t✓
-24\tEgotheist UTC +2\t✓
-25\tAkuukis UTC+3\t✓
-26\tQuetzal UTC +3\t✓
-27\tjonyjonas UTC+1, yes\t✓
-28\tTurius UTC+2. Prefer my division\t✓
-29\tGaz\t✓
-30\tLerrike EEST (UTC+3 currently) Yes, but only as last resort.\t✓
-31\theitlinger96 1/UTC+2 2/Yes\t✓`;
+18\tMichael of Minsk\t✓
+19\tphielp UTC+2\t✓
+20\ttjumma UTC +3\t✓
+21\tJel UTC+2\t✓
+22\tteuzet.\t✓
+23\tbeefy BST (UTC+1). I can play in another division.\t✓
+24\tchloriss UTC+3, open to play in any division if needed\t✓
+25\tEgotheist UTC +2\t✓
+26\tAkuukis UTC+3\t✓
+27\tQuetzal UTC +3\t✓
+28\tjonyjonas UTC+1, yes\t✓
+29\tTurius UTC+2. Prefer my division\t✓
+30\tGaz\t✓
+31\tLerrike EEST (UTC+3 currently) Yes, but only as last resort.\t✓
+32\theitlinger96 1/UTC+2 2/Yes\t✓`;
 
 // Timezone / availability keywords that mark the start of a note inside a name
 // cell. We cut the name at the first one so multi-word handles survive.
